@@ -1,21 +1,20 @@
 package ru.practicum.shareit.user.service;
 
-import org.springframework.validation.annotation.Validated;
 import ru.practicum.shareit.user.model.User;
 
-import javax.validation.Valid;
 import java.util.List;
 
-@Validated
 public interface UserService {
 
     List<User> getUsers();
 
     User getUser(long id);
 
-    User createUser(@Valid User user);
+    User createUser(User user);
 
-    User updateUser(@Valid User user);
+    User updateUser(User user);
+
+    User updateUser(long id, User patch);
 
     void deleteUser(long id);
 

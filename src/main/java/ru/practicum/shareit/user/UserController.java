@@ -1,15 +1,15 @@
 package ru.practicum.shareit.user;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.dto.UserDto;
 import ru.practicum.shareit.user.model.dto.UserMapper;
+import ru.practicum.shareit.user.model.dto.UserPatchDto;
 import ru.practicum.shareit.user.service.UserService;
-import ru.practicum.shareit.utils.JsonMergePatchUtils;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +23,7 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> findAll() {
+        log.info("GET : get all users");
         return userService.getUsers().stream()
                 .map(UserMapper::toUserDto)
                 .collect(Collectors.toList());
@@ -30,12 +31,13 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public UserDto find(@PathVariable long userId) {
+        log.info("GET : get user id : {}", userId);
         User user = userService.getUser(userId);
         return UserMapper.toUserDto(user);
     }
 
     @PostMapping
-    public UserDto create(@RequestBody UserDto userDto) {
+    public UserDto create(@Valid @RequestBody UserDto userDto) {
         log.info("POST : create user {}", userDto);
         User user = UserMapper.toUser(userDto);
         user = userService.createUser(user);
@@ -43,13 +45,10 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public UserDto update(@PathVariable long userId, @RequestBody JsonNode userDtoPatch) {
-        log.info("PATCH : update user id : {} body : {}", userId, userDtoPatch);
-        User user = userService.getUser(userId);
-        UserDto userDto = UserMapper.toUserDto(user);
-        UserDto patchedUserDto = JsonMergePatchUtils.mergePatch(userDto, userDtoPatch, UserDto.class);
-        User patchedUser = UserMapper.toUser(patchedUserDto);
-        patchedUser = userService.updateUser(patchedUser);
+    public UserDto update(@PathVariable long userId, @Valid @RequestBody UserPatchDto userPatchDto) {
+        log.info("PATCH : update user id : {} body : {}", userId, userPatchDto);
+        User userPatch = UserMapper.toUser(userPatchDto);
+        User patchedUser = userService.updateUser(userId, userPatch);
         return UserMapper.toUserDto(patchedUser);
     }
 

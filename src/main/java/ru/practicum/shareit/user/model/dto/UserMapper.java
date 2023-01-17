@@ -20,4 +20,11 @@ public class UserMapper {
         return user;
     }
 
+    public static User toUser(UserPatchDto userPatchDto) {
+        User user = new User();
+        user.setName(userPatchDto.getName());
+        user.setEmail(userPatchDto.getEmail());
+        return user;
+    }
+
 }

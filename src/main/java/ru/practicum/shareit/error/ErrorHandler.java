@@ -12,6 +12,8 @@ import ru.practicum.shareit.error.exceptions.UniqueConstraintException;
 import ru.practicum.shareit.error.model.ErrorResponse;
 
 import javax.validation.ConstraintViolationException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 @Slf4j
 @RestControllerAdvice
@@ -49,7 +51,9 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleServerError(Exception exception) {
         log.error("500", exception);
-        return new ErrorResponse(exception.getMessage());
+        var stringWriter = new StringWriter();
+        exception.printStackTrace(new PrintWriter(stringWriter));
+        return new ErrorResponse(stringWriter.toString());
     }
 
 }

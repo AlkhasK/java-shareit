@@ -4,10 +4,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -16,13 +13,13 @@ public class InMemoryItemStorage implements ItemStorage {
 
     private final Map<Long, Item> items = new HashMap<>();
 
+    private final Map<Long, List<Item>> userItems = new HashMap<>();
+
     private long id = 0;
 
     @Override
     public List<Item> findAllForUser(long userId) {
-        return items.values().stream()
-                .filter(item -> item.getOwnerId().equals(userId))
-                .collect(Collectors.toList());
+        return userItems.getOrDefault(userId, Collections.emptyList());
     }
 
     @Override
@@ -34,7 +31,20 @@ public class InMemoryItemStorage implements ItemStorage {
     public Item create(Item item) {
         item.setId(getId());
         items.put(item.getId(), item);
+        addToUserItems(item);
         return item;
+    }
+
+    private void addToUserItems(Item item) {
+        long ownerId = item.getOwner().getId();
+        List<Item> items = userItems.get(ownerId);
+        if (items == null) {
+            items = new ArrayList<>();
+            items.add(item);
+            userItems.put(ownerId, items);
+            return;
+        }
+        items.add(item);
     }
 
     private long getId() {
@@ -47,7 +57,18 @@ public class InMemoryItemStorage implements ItemStorage {
         if (oldItem == null) {
             throw new EntityNotFoundException("No item with id : " + item.getId());
         }
+        updateUserItems(item);
         return item;
+    }
+
+    private void updateUserItems(Item item) {
+        long ownerId = item.getOwner().getId();
+        List<Item> items = userItems.get(ownerId);
+        items = items.stream()
+                .map(i -> i.getId().equals(item.getId()) ? item : i)
+                .limit(1)
+                .collect(Collectors.toList());
+        userItems.put(ownerId, items);
     }
 
     @Override

@@ -6,7 +6,7 @@ import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
 import ru.practicum.shareit.error.exceptions.PermissionException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.utils.JsonMergePatchUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,22 +17,26 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemStorage itemStorage;
 
-    private final UserService userService;
-
     @Override
     public Item createItem(Item item) {
-        userService.getUser(item.getOwnerId());
         return itemStorage.create(item);
     }
 
     @Override
-    public Item updateItem(Item item) {
-        userService.getUser(item.getOwnerId());
-        long ownerId = getItem(item.getId()).getOwnerId();
-        if (item.getOwnerId() != ownerId) {
-            throw new PermissionException("String format user hasn't permission to update item id :" + item.getId());
+    public Item updateItem(Item patchedItem) {
+        Item item = getItem(patchedItem.getId());
+        if (!patchedItem.getOwner().equals(item.getOwner())) {
+            throw new PermissionException("User doesn't have permission for updating item id :" + item.getId());
         }
-        return itemStorage.update(item);
+        return itemStorage.update(patchedItem);
+    }
+
+    @Override
+    public Item updateItem(long itemId, Item patch) {
+        patch.setId(itemId);
+        Item item = getItem(itemId);
+        Item patchedItem = JsonMergePatchUtils.mergePatch(item, patch, Item.class);
+        return updateItem(patchedItem);
     }
 
     @Override
@@ -43,7 +47,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> getItemsForUser(long userId) {
-        userService.getUser(userId);
         return itemStorage.findAllForUser(userId);
     }
 
