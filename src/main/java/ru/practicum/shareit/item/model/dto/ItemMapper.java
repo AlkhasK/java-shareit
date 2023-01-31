@@ -35,5 +35,4 @@ public class ItemMapper {
         item.setOwner(owner);
         return item;
     }
-
 }

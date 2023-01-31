@@ -6,20 +6,21 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
-import ru.practicum.shareit.error.exceptions.PermissionException;
-import ru.practicum.shareit.error.exceptions.UniqueConstraintException;
+import ru.practicum.shareit.error.exceptions.*;
 import ru.practicum.shareit.error.model.ErrorResponse;
 
 import javax.validation.ConstraintViolationException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.DateTimeException;
 
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class,
+            ItemNotAvailableException.class, DateTimeException.class, UserRestrictionException.class,
+            IllegalArgumentException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationError(Exception validationException) {
         log.warn(validationException.getMessage());

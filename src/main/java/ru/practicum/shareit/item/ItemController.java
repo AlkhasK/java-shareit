@@ -3,17 +3,15 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.comment.model.dto.CommentCreateDto;
+import ru.practicum.shareit.item.comment.model.dto.CommentDto;
 import ru.practicum.shareit.item.model.dto.ItemDto;
-import ru.practicum.shareit.item.model.dto.ItemMapper;
 import ru.practicum.shareit.item.model.dto.ItemPatchDto;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.utils.ControllerConstants;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -21,52 +19,45 @@ import java.util.stream.Collectors;
 @RequestMapping("/items")
 public class ItemController {
 
-    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
-
     private final ItemService itemService;
 
-    private final UserService userService;
-
     @PostMapping
-    public ItemDto create(@RequestHeader(USER_ID_HEADER) long userId,
+    public ItemDto create(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId,
                           @Valid @RequestBody ItemDto itemDto) {
         log.info("POST : create item {}", itemDto);
-        User owner = userService.getUser(userId);
-        Item item = ItemMapper.toItem(itemDto, owner);
-        item = itemService.createItem(item);
-        return ItemMapper.toItemDto(item);
+        return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader(USER_ID_HEADER) long userId, @PathVariable long itemId,
+    public ItemDto update(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId, @PathVariable long itemId,
                           @Valid @RequestBody ItemPatchDto itemPatchDto) {
         log.info("PATCH : update item id : {} body : {}", itemId, itemPatchDto);
-        User owner = userService.getUser(userId);
-        Item itemPatch = ItemMapper.toItem(itemPatchDto, owner);
-        Item patchedItem = itemService.updateItem(itemId, itemPatch);
-        return ItemMapper.toItemDto(patchedItem);
+        return itemService.updateItem(userId, itemId, itemPatchDto);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto find(@PathVariable long itemId) {
+    public ItemDto find(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId,
+                        @PathVariable long itemId) {
         log.info("GET : get item id : {}", itemId);
-        Item item = itemService.getItem(itemId);
-        return ItemMapper.toItemDto(item);
+        return itemService.getItem(userId, itemId);
     }
 
     @GetMapping
-    public List<ItemDto> findAllForUser(@RequestHeader(USER_ID_HEADER) long userId) {
+    public List<ItemDto> findAllForUser(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId) {
         log.info("GET : get items for user id : {}", userId);
-        return itemService.getItemsForUser(userId).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemService.getItemsForUser(userId);
     }
 
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text) {
         log.info("GET : search items by text : {}", text);
-        return itemService.searchItems(text).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemService.searchItems(text);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto addComment(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId,
+                                 @PathVariable long itemId, @Valid @RequestBody CommentCreateDto commentCreateDto) {
+        log.info("POST : add comment : {} to item : {}", commentCreateDto, itemId);
+        return itemService.addComment(userId, itemId, commentCreateDto);
     }
 }
