@@ -13,8 +13,6 @@ public interface ItemService {
 
     ItemDto updateItem(long userId, long itemId, ItemPatchDto itemPatchDto);
 
-    //Item updateItem(long itemId, Item patch);
-
     ItemDto getItem(long userId, long itemId);
 
     List<ItemDto> getItemsForUser(long userId);

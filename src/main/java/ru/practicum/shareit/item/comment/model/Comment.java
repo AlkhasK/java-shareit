@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item.comment.model;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.shareit.item.model.Item;
@@ -13,20 +12,19 @@ import java.time.LocalDateTime;
 @Table(name = "comments")
 @Getter
 @Setter
-@EqualsAndHashCode
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
-    Long id;
+    private Long id;
     @Column(name = "comment_text", nullable = false, length = 1025)
-    String text;
+    private String text;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false)
-    Item item;
+    private Item item;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    User author;
+    private User author;
     @Column(name = "comment_created", nullable = false)
-    LocalDateTime created;
+    private LocalDateTime created;
 }

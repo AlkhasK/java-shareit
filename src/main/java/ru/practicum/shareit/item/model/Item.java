@@ -1,23 +1,17 @@
 package ru.practicum.shareit.item.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "items")
 @Getter
 @Setter
-@EqualsAndHashCode
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,12 +30,4 @@ public class Item {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private ItemRequest request;
-    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
-    @JsonIgnore
-    @EqualsAndHashCode.Exclude
-    private List<Booking> bookings;
-    @OneToMany(mappedBy = "item", cascade = CascadeType.REMOVE)
-    @JsonIgnore
-    @EqualsAndHashCode.Exclude
-    private List<Comment> comments;
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
+import ru.practicum.shareit.booking.model.dto.BookingItemDto;
 import ru.practicum.shareit.booking.model.dto.BookingMapper;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
@@ -26,9 +27,7 @@ import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.utils.JsonMergePatchUtils;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,17 +104,42 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getItemsForUser(long userId) {
         List<Item> items = itemRepository.findByOwner_Id(userId);
+        List<Long> itemsIds = items.stream()
+                .map(Item::getId)
+                .collect(Collectors.toList());
+        List<Booking> bookings = bookingRepository.findAllByItem_IdInAndStatusIn(itemsIds,
+                List.of(Status.APPROVED, Status.WAITING));
+        List<Comment> comments = commentRepository.findAllByItem_IdIn(itemsIds);
+        Map<Long, List<CommentDto>> groupedComments = comments.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId(),
+                        Collectors.mapping(commentMapper::toCommentDto, Collectors.toList())));
         List<ItemDto> itemsDto = items.stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
-        itemsDto.forEach(item -> item.setLastBooking(getLastBooking(item.getId())
-                .map(bookingMapper::toBookingItemDto).orElse(null)));
-        itemsDto.forEach(item -> item.setNextBooking(getNextBooking(item.getId())
-                .map(bookingMapper::toBookingItemDto).orElse(null)));
-        itemsDto.forEach(item -> item.setComments(getComments(item.getId()).stream()
-                .map(commentMapper::toCommentDto)
-                .collect(Collectors.toList())));
+        itemsDto.forEach(item -> {
+            item.setLastBooking(getLastBooking(item.getId(), bookings));
+            item.setNextBooking(getNextBooking(item.getId(), bookings));
+            item.setComments(groupedComments.get(item.getId()));
+        });
         return itemsDto;
+    }
+
+    private BookingItemDto getLastBooking(long itemId, List<Booking> bookings) {
+        Booking lastBooking = bookings.stream()
+                .filter(booking -> booking.getItem().getId().equals(itemId))
+                .filter(booking -> booking.getStart().isBefore(LocalDateTime.now()))
+                .max(Comparator.comparing(Booking::getStart))
+                .orElse(null);
+        return Objects.isNull(lastBooking) ? null : bookingMapper.toBookingItemDto(lastBooking);
+    }
+
+    private BookingItemDto getNextBooking(long itemId, List<Booking> bookings) {
+        Booking nextBooking = bookings.stream()
+                .filter(booking -> booking.getItem().getId().equals(itemId))
+                .filter(booking -> booking.getStart().isAfter(LocalDateTime.now()))
+                .min(Comparator.comparing(Booking::getStart))
+                .orElse(null);
+        return Objects.isNull(nextBooking) ? null : bookingMapper.toBookingItemDto(nextBooking);
     }
 
     @Override
