@@ -28,4 +28,24 @@ public class ItemDto {
     private BookingItemDto lastBooking;
     private BookingItemDto nextBooking;
     private List<CommentDto> comments;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ItemDto)) return false;
+
+        ItemDto itemDto = (ItemDto) o;
+
+        if (!getName().equals(itemDto.getName())) return false;
+        if (!getDescription().equals(itemDto.getDescription())) return false;
+        return getAvailable().equals(itemDto.getAvailable());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName().hashCode();
+        result = 31 * result + getDescription().hashCode();
+        result = 31 * result + getAvailable().hashCode();
+        return result;
+    }
 }

@@ -1,6 +1,9 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +20,13 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.utils.PageUtils;
 
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -98,75 +101,77 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookings(long userId, String stateParam) {
+    public List<BookingDto> getBookings(long userId, String stateParam, int from, int size) {
         userService.getUser(userId);
         State state = State.of(stateParam);
         if (Objects.isNull(state)) {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
-        List<Booking> bookings = new ArrayList<>();
+        Page<Booking> bookings = Page.empty();
+        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
+        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"), sort);
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByBooker_Id(userId, sort);
+                bookings = bookingRepository.findAllByBooker_Id(userId, pageable);
                 break;
             case CURRENT:
                 bookings = bookingRepository.findAllByBooker_IdAndStatusInAndStartIsBeforeAndEndIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(),
+                        LocalDateTime.now(), pageable);
                 break;
             case PAST:
                 bookings = bookingRepository.findAllByBooker_IdAndStatusInAndEndIsBefore(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
                 break;
             case FUTURE:
                 bookings = bookingRepository.findAllByBooker_IdAndStatusInAndStartIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
                 break;
             case WAITING:
-                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.WAITING, sort);
+                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.WAITING, pageable);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.REJECTED, sort);
+                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.REJECTED, pageable);
                 break;
         }
-        return bookings.stream()
-                .map(bookingMapper::toBookingDto)
-                .collect(Collectors.toList());
+        return PageUtils.getElements(bookings.map(bookingMapper::toBookingDto).getContent(), from, size);
     }
 
     @Override
-    public List<BookingDto> getBookingsItemOwner(long userId, String stateParam) {
+    public List<BookingDto> getBookingsItemOwner(long userId, String stateParam, int from, int size) {
         userService.getUser(userId);
         State state = State.of(stateParam);
         if (Objects.isNull(state)) {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
-        List<Booking> bookings = new ArrayList<>();
+        Page<Booking> bookings = Page.empty();
+        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
+        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"), sort);
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByItem_Owner_Id(userId, sort);
+                bookings = bookingRepository.findAllByItem_Owner_Id(userId, pageable);
                 break;
             case CURRENT:
                 bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsBeforeAndEndIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(),
+                        LocalDateTime.now(), pageable);
                 break;
             case PAST:
                 bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndEndIsBefore(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
                 break;
             case FUTURE:
                 bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), sort);
+                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
                 break;
             case WAITING:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.WAITING, sort);
+                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.WAITING, pageable);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.REJECTED, sort);
+                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.REJECTED, pageable);
                 break;
         }
-        return bookings.stream()
-                .map(bookingMapper::toBookingDto)
-                .collect(Collectors.toList());
+        return PageUtils.getElements(bookings.map(bookingMapper::toBookingDto).getContent(), from, size);
     }
 
 }

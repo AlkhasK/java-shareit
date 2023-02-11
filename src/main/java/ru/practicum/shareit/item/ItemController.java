@@ -43,15 +43,19 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> findAllForUser(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId) {
+    public List<ItemDto> findAllForUser(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId,
+                                        @RequestParam(defaultValue = "0") int from,
+                                        @RequestParam(defaultValue = "5") int size) {
         log.info("GET : get items for user id : {}", userId);
-        return itemService.getItemsForUser(userId);
+        return itemService.getItemsForUser(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> search(@RequestParam String text) {
+    public List<ItemDto> search(@RequestParam String text,
+                                @RequestParam(defaultValue = "0") int from,
+                                @RequestParam(defaultValue = "5") int size) {
         log.info("GET : search items by text : {}", text);
-        return itemService.searchItems(text);
+        return itemService.searchItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
