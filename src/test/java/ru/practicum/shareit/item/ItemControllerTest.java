@@ -26,17 +26,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ItemController.class)
 class ItemControllerTest {
 
+    private final long userId = 0L;
     @Autowired
     private ObjectMapper objectMapper;
-
     @MockBean
     private ItemService itemService;
-
     @Autowired
     private MockMvc mockMvc;
-
-    private final long userId = 0L;
-
     private ItemDto itemDto;
 
     @BeforeEach

@@ -8,7 +8,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,6 +23,7 @@ class ItemRepositoryTest {
     private TestEntityManager entityManager;
     private Item item;
     private User user;
+    private ItemRequest itemRequest;
     @Autowired
     private ItemRepository itemRepository;
 
@@ -42,6 +47,13 @@ class ItemRepositoryTest {
         item.setAvailable(available);
     }
 
+    @BeforeEach
+    void initItemRequest() {
+        itemRequest = new ItemRequest();
+        itemRequest.setDescription("text");
+        itemRequest.setCreated(LocalDateTime.now());
+    }
+
     @Test
     void findByOwner_IdWhenItemWithOwnerExistsThenReturnItem() {
         User createdUser = entityManager.persistAndFlush(user);
@@ -63,5 +75,33 @@ class ItemRepositoryTest {
         Page<Item> result = itemRepository.search(text, PageRequest.of(0, 5));
 
         assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void findByRequest_IdInWhenItemWithRequestExistsThenReturnItem() {
+        User createdUser = entityManager.persistAndFlush(user);
+        itemRequest.setRequestor(createdUser);
+        ItemRequest createdItemRequest = entityManager.persistAndFlush(itemRequest);
+        item.setOwner(createdUser);
+        item.setRequest(createdItemRequest);
+        entityManager.persistAndFlush(item);
+
+        List<Item> result = itemRepository.findByRequest_IdIn(List.of(createdItemRequest.getId()));
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void findByRequest_IdWhenItemWithRequestExistsThenReturnItem() {
+        User createdUser = entityManager.persistAndFlush(user);
+        itemRequest.setRequestor(createdUser);
+        ItemRequest createdItemRequest = entityManager.persistAndFlush(itemRequest);
+        item.setOwner(createdUser);
+        item.setRequest(createdItemRequest);
+        entityManager.persistAndFlush(item);
+
+        List<Item> result = itemRepository.findByRequest_IdIn(List.of(createdItemRequest.getId()));
+
+        assertThat(result).hasSize(1);
     }
 }

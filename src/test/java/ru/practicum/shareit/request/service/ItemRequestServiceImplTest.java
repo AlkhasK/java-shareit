@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -100,11 +99,11 @@ class ItemRequestServiceImplTest {
         itemRequestDto.setItems(List.of(itemDto));
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Sort.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_Id(Mockito.anyLong(), Mockito.any(Sort.class)))
                 .thenReturn(itemRequestIterable);
         Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, itemIterable))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
+        Mockito.when(itemRepository.findByRequest_IdIn(Mockito.anyList()))
                 .thenReturn(List.of(item));
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService.getAllItemRequestCreatedByUser(userId);
@@ -125,11 +124,11 @@ class ItemRequestServiceImplTest {
         ItemRequestDto itemRequestDto = new ItemRequestDto();
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Sort.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_Id(Mockito.anyLong(), Mockito.any(Sort.class)))
                 .thenReturn(itemRequestIterable);
         Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, null))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
+        Mockito.when(itemRepository.findByRequest_IdIn(Mockito.anyList()))
                 .thenReturn(Collections.emptyList());
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService.getAllItemRequestCreatedByUser(userId);
@@ -144,7 +143,7 @@ class ItemRequestServiceImplTest {
         User requestor = new User();
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Sort.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_Id(Mockito.anyLong(), Mockito.any(Sort.class)))
                 .thenReturn(Collections.emptyList());
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService.getAllItemRequestCreatedByUser(userId);
@@ -163,7 +162,7 @@ class ItemRequestServiceImplTest {
         assertThrows(EntityNotFoundException.class,
                 () -> itemRequestService.getAllItemRequestCreatedByUser(userId));
         Mockito.verify(itemRequestRepository, Mockito.never())
-                .findAll(Mockito.any(BooleanExpression.class), Mockito.any(Sort.class));
+                .findByRequestor_Id(Mockito.anyLong(), Mockito.any(Sort.class));
     }
 
     @Test
@@ -186,11 +185,11 @@ class ItemRequestServiceImplTest {
         itemRequestDto.setItems(List.of(itemDto));
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Pageable.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_IdNot(Mockito.anyLong(), Mockito.any(Pageable.class)))
                 .thenReturn(itemRequestPage);
         Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, itemIterable))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
+        Mockito.when(itemRepository.findByRequest_IdIn(Mockito.anyList()))
                 .thenReturn(List.of(item));
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService
@@ -212,11 +211,11 @@ class ItemRequestServiceImplTest {
         ItemRequestDto itemRequestDto = new ItemRequestDto();
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Pageable.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_IdNot(Mockito.anyLong(), Mockito.any(Pageable.class)))
                 .thenReturn(itemRequestPage);
         Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, null))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
+        Mockito.when(itemRepository.findByRequest_IdIn(Mockito.anyList()))
                 .thenReturn(Collections.emptyList());
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService
@@ -235,7 +234,7 @@ class ItemRequestServiceImplTest {
         Page<ItemRequest> itemRequestPage = new PageImpl<>(Collections.emptyList());
         Mockito.when(userService.getUser(userId))
                 .thenReturn(requestor);
-        Mockito.when(itemRequestRepository.findAll(Mockito.any(BooleanExpression.class), Mockito.any(Pageable.class)))
+        Mockito.when(itemRequestRepository.findByRequestor_IdNot(Mockito.anyLong(), Mockito.any(Pageable.class)))
                 .thenReturn(itemRequestPage);
 
         List<ItemRequestDto> itemRequestDtos = itemRequestService.findAllCreatedByOther(userId, from, size);
@@ -256,7 +255,7 @@ class ItemRequestServiceImplTest {
         assertThrows(EntityNotFoundException.class,
                 () -> itemRequestService.findAllCreatedByOther(userId, from, size));
         Mockito.verify(itemRequestRepository, Mockito.never())
-                .findAll(Mockito.any(BooleanExpression.class), Mockito.any(Pageable.class));
+                .findByRequestor_IdNot(Mockito.anyLong(), Mockito.any(Pageable.class));
     }
 
     @Test
@@ -268,7 +267,7 @@ class ItemRequestServiceImplTest {
         assertThrows(IllegalArgumentException.class,
                 () -> itemRequestService.findAllCreatedByOther(userId, from, size));
         Mockito.verify(itemRequestRepository, Mockito.never())
-                .findAll(Mockito.any(BooleanExpression.class), Mockito.any(Pageable.class));
+                .findByRequestor_IdNot(Mockito.anyLong(), Mockito.any(Pageable.class));
     }
 
     @Test
@@ -282,7 +281,6 @@ class ItemRequestServiceImplTest {
         Item item = new Item();
         item.setId(itemId);
         item.setRequest(itemRequest);
-        List<Item> items = List.of(item);
         ItemRequestDto.ItemDto itemDto = new ItemRequestDto.ItemDto();
         ItemRequestDto itemRequestDto = new ItemRequestDto();
         itemRequestDto.setItems(List.of(itemDto));
@@ -290,10 +288,8 @@ class ItemRequestServiceImplTest {
                 .thenReturn(requestor);
         Mockito.when(itemRequestRepository.findById(itemRequestId))
                 .thenReturn(Optional.of(itemRequest));
-        Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, items))
+        Mockito.when(itemRequestMapper.toItemRequestDto(Mockito.any(), Mockito.anyList()))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
-                .thenReturn(List.of(item));
 
         ItemRequestDto itemRequestDtoReturned = itemRequestService.getItemRequest(userId, itemRequestId);
 
@@ -315,8 +311,6 @@ class ItemRequestServiceImplTest {
                 .thenReturn(Optional.of(itemRequest));
         Mockito.when(itemRequestMapper.toItemRequestDto(itemRequest, Collections.emptyList()))
                 .thenReturn(itemRequestDto);
-        Mockito.when(itemRepository.findAll(Mockito.any(BooleanExpression.class)))
-                .thenReturn(Collections.emptyList());
 
         ItemRequestDto itemRequestDtoReturned = itemRequestService.getItemRequest(userId, itemRequestId);
 
@@ -336,7 +330,7 @@ class ItemRequestServiceImplTest {
         assertThrows(EntityNotFoundException.class,
                 () -> itemRequestService.getItemRequest(userId, itemRequestId));
         Mockito.verify(itemRepository, Mockito.never())
-                .findAll(Mockito.any(BooleanExpression.class));
+                .findByRequest_IdIn(Mockito.anyList());
     }
 
     @Test

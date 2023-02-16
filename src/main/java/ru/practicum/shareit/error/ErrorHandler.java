@@ -6,7 +6,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.shareit.error.exceptions.*;
+import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
+import ru.practicum.shareit.error.exceptions.ItemNotAvailableException;
+import ru.practicum.shareit.error.exceptions.PermissionException;
+import ru.practicum.shareit.error.exceptions.UserRestrictionException;
 import ru.practicum.shareit.error.model.ErrorResponse;
 
 import javax.validation.ConstraintViolationException;
@@ -25,13 +28,6 @@ public class ErrorHandler {
     public ErrorResponse handleValidationError(Exception validationException) {
         log.warn(validationException.getMessage());
         return new ErrorResponse(validationException.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleValidationError(UniqueConstraintException uniqueConstraintException) {
-        log.warn(uniqueConstraintException.getMessage());
-        return new ErrorResponse(uniqueConstraintException.getMessage());
     }
 
     @ExceptionHandler

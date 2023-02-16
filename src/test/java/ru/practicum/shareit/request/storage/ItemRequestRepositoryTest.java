@@ -5,11 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,5 +70,30 @@ class ItemRequestRepositoryTest {
         Optional<ItemRequest> itemRequestExtract = itemRequestRepository.findById(createdItemRequest.getId());
 
         assertThat(itemRequestExtract).isPresent();
+    }
+
+    @Test
+    void findByRequestor_IdWhenIdExistThenReturnItemRequest() {
+        User createdUser = entityManager.persistAndFlush(user);
+        itemRequest.setRequestor(createdUser);
+        entityManager.persistAndFlush(itemRequest);
+
+        List<ItemRequest> itemRequestExtract = itemRequestRepository.findByRequestor_Id(createdUser.getId(),
+                Sort.unsorted());
+
+        assertThat(itemRequestExtract).hasSize(1);
+    }
+
+    @Test
+    void findByRequestor_IdNotWhenIdExistThenReturnItemRequest() {
+        long userIdNotExist = 99;
+        User createdUser = entityManager.persistAndFlush(user);
+        itemRequest.setRequestor(createdUser);
+        entityManager.persistAndFlush(itemRequest);
+
+        Page<ItemRequest> itemRequestExtract = itemRequestRepository.findByRequestor_IdNot(userIdNotExist,
+                PageRequest.of(0, 5));
+
+        assertThat(itemRequestExtract.getContent()).hasSize(1);
     }
 }

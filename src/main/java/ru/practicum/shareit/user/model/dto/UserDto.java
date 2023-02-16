@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.model.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -11,8 +12,10 @@ import javax.validation.constraints.Size;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode
 public class UserDto {
     @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Long id;
     @NotBlank
     @Size(max = 30)
@@ -20,22 +23,4 @@ public class UserDto {
     @NotBlank
     @Email
     private String email;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UserDto)) return false;
-
-        UserDto userDto = (UserDto) o;
-
-        if (getName() != null ? !getName().equals(userDto.getName()) : userDto.getName() != null) return false;
-        return getEmail() != null ? getEmail().equals(userDto.getEmail()) : userDto.getEmail() == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getName() != null ? getName().hashCode() : 0;
-        result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
-        return result;
-    }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.shareit.request.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -10,10 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.QItem;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.request.model.QItemRequest;
 import ru.practicum.shareit.request.model.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.model.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.dto.ItemRequestMapper;
@@ -56,10 +53,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> getAllItemRequestCreatedByUser(long userId) {
         userService.getUser(userId);
-        QItemRequest itemRequest = QItemRequest.itemRequest;
-        BooleanExpression itemRequestCondition = itemRequest.requestor.id.eq(userId);
-        Iterable<ItemRequest> itemRequests = itemRequestRepository.findAll(itemRequestCondition,
-                SORT_CREATED_DESC);
+        List<ItemRequest> itemRequests = itemRequestRepository.findByRequestor_Id(userId, SORT_CREATED_DESC);
         if (!itemRequests.iterator().hasNext()) {
             return Collections.emptyList();
         }
@@ -74,9 +68,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     private Map<Long, List<Item>> getItems(List<Long> itemRequestIds) {
-        QItem item = QItem.item;
-        BooleanExpression itemCondition = item.request.id.in(itemRequestIds);
-        Iterable<Item> items = itemRepository.findAll(itemCondition);
+        Iterable<Item> items = itemRepository.findByRequest_IdIn(itemRequestIds);
         return iteratorToStream(items)
                 .collect(Collectors.groupingBy((Item itm) -> itm.getRequest().getId()));
     }
@@ -88,11 +80,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     @Override
     public List<ItemRequestDto> findAllCreatedByOther(long userId, int from, int size) {
         userService.getUser(userId);
-        QItemRequest itemRequest = QItemRequest.itemRequest;
-        BooleanExpression itemRequestCondition = itemRequest.requestor.id.ne(userId);
         Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
         Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"), SORT_CREATED_DESC);
-        Page<ItemRequest> pageItemRequests = itemRequestRepository.findAll(itemRequestCondition, pageable);
+        Page<ItemRequest> pageItemRequests = itemRequestRepository.findByRequestor_IdNot(userId, pageable);
         List<ItemRequest> itemRequests = PageUtils.getElements(pageItemRequests.getContent(), from, size);
         if (itemRequests.isEmpty()) {
             return Collections.emptyList();
@@ -112,9 +102,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         userService.getUser(userId);
         ItemRequest itemRequest = itemRequestRepository.findById(requestId)
                 .orElseThrow(() -> new EntityNotFoundException("No item request id : " + requestId));
-        QItem item = QItem.item;
-        BooleanExpression itemCondition = item.request.id.eq(requestId);
-        Iterable<Item> items = itemRepository.findAll(itemCondition);
+        Iterable<Item> items = itemRepository.findByRequest_Id(requestId);
         return itemRequestMapper.toItemRequestDto(itemRequest, iteratorToStream(items).collect(Collectors.toList()));
     }
 

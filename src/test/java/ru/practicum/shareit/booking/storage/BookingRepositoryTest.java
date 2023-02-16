@@ -23,21 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 class BookingRepositoryTest {
 
+    private final Pageable pageable = PageRequest.of(0, 1);
     @Autowired
     private BookingRepository bookingRepository;
-
     @Autowired
     private TestEntityManager entityManager;
-
     private User itemOwner;
-
     private Item item;
-
     private User booker;
-
     private Booking booking;
-
-    private final Pageable pageable = PageRequest.of(0, 1);
 
     @BeforeEach
     void initItemOwner() {

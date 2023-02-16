@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.model.dto;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +15,9 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@EqualsAndHashCode
 public class ItemDto {
+    @EqualsAndHashCode.Exclude
     private Long id;
     @NotBlank
     @Size(max = 30)
@@ -24,28 +27,12 @@ public class ItemDto {
     private String description;
     @NotNull
     private Boolean available;
+    @EqualsAndHashCode.Exclude
     private Long requestId;
+    @EqualsAndHashCode.Exclude
     private BookingItemDto lastBooking;
+    @EqualsAndHashCode.Exclude
     private BookingItemDto nextBooking;
+    @EqualsAndHashCode.Exclude
     private List<CommentDto> comments;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ItemDto)) return false;
-
-        ItemDto itemDto = (ItemDto) o;
-
-        if (!getName().equals(itemDto.getName())) return false;
-        if (!getDescription().equals(itemDto.getDescription())) return false;
-        return getAvailable().equals(itemDto.getAvailable());
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getName().hashCode();
-        result = 31 * result + getDescription().hashCode();
-        result = 31 * result + getAvailable().hashCode();
-        return result;
-    }
 }
