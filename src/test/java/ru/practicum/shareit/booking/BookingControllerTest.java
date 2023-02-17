@@ -76,6 +76,8 @@ class BookingControllerTest {
                 .getContentAsString();
 
         assertThat(result).isEqualTo(objectMapper.writeValueAsString(bookingDto));
+        Mockito.verify(bookingService, Mockito.times(1))
+                .createBooking(Mockito.anyLong(), Mockito.any());
     }
 
     @SneakyThrows

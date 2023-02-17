@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ import ru.practicum.shareit.request.storage.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.utils.JsonMergePatchUtils;
-import ru.practicum.shareit.utils.PageUtils;
+import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -118,11 +117,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getItemsForUser(long userId, int from, int size) {
-        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
-        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"));
+        Pageable pageable = PageRequestWithOffset.of(from, size);
         Page<Item> pageItems = itemRepository.findByOwner_Id(userId, pageable);
-        List<Item> items = PageUtils.getElements(pageItems.getContent(), from, size);
-        List<Long> itemsIds = items.stream()
+        List<Long> itemsIds = pageItems.getContent().stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
         List<Booking> bookings = bookingRepository.findAllByItem_IdInAndStatusIn(itemsIds,
@@ -131,7 +128,7 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, List<CommentDto>> groupedComments = comments.stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId(),
                         Collectors.mapping(commentMapper::toCommentDto, Collectors.toList())));
-        List<ItemDto> itemsDto = items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
+        List<ItemDto> itemsDto = pageItems.getContent().stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
         itemsDto.forEach(item -> {
             item.setLastBooking(getLastBooking(item.getId(), bookings));
             item.setNextBooking(getNextBooking(item.getId(), bookings));
@@ -163,11 +160,9 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
-        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"));
+        Pageable pageable = PageRequestWithOffset.of(from, size);
         Page<Item> pageItems = itemRepository.search(text, pageable);
-        List<Item> items = PageUtils.getElements(pageItems.getContent(), from, size);
-        return items.stream()
+        return pageItems.getContent().stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }

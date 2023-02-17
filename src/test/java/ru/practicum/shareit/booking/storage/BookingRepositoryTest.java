@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 class BookingRepositoryTest {
 
-    private final Pageable pageable = PageRequest.of(0, 1);
+    private final Pageable pageable = PageRequestWithOffset.of(0, 5);
     @Autowired
     private BookingRepository bookingRepository;
     @Autowired
@@ -80,6 +80,7 @@ class BookingRepositoryTest {
 
     @Test
     void findAllByBooker_IdAndStatus() {
+        int expectedBookingCount = 2;
         User createdItemOwner = entityManager.persistAndFlush(itemOwner);
         item.setOwner(createdItemOwner);
         Item createdItem = entityManager.persistAndFlush(item);
@@ -87,11 +88,27 @@ class BookingRepositoryTest {
         booking.setBooker(createdBooker);
         booking.setItem(createdItem);
         Booking createdBooking = entityManager.persistAndFlush(booking);
+        Booking secondBooking = new Booking();
+        secondBooking.setStart(LocalDateTime.now());
+        secondBooking.setEnd(LocalDateTime.now());
+        secondBooking.setStatus(Status.APPROVED);
+        secondBooking.setBooker(createdBooker);
+        secondBooking.setItem(createdItem);
+        Booking createdSecondBooking = entityManager.persistAndFlush(secondBooking);
+        Booking thirdBooking = new Booking();
+        thirdBooking.setStart(LocalDateTime.now());
+        thirdBooking.setEnd(LocalDateTime.now());
+        thirdBooking.setStatus(Status.APPROVED);
+        thirdBooking.setBooker(createdItemOwner);
+        thirdBooking.setItem(createdItem);
+        entityManager.persistAndFlush(thirdBooking);
 
         Page<Booking> bookingExtract = bookingRepository.findAllByBooker_IdAndStatus(createdBooking.getBooker().getId(),
                 Status.APPROVED, pageable);
 
-        assertThat(bookingExtract.getContent().get(0).getId()).isEqualTo(createdBooking.getId());
+        assertThat(bookingExtract).hasSize(expectedBookingCount);
+        assertThat(bookingExtract.map(Booking::getId).getContent())
+                .hasSameElementsAs(List.of(createdBooking.getId(), createdSecondBooking.getId()));
     }
 
     @Test

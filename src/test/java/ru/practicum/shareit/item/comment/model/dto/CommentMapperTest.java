@@ -16,6 +16,7 @@ class CommentMapperTest {
     @Test
     void toCommentWhenCommentAndItemAndUserValid() {
         String text = "text";
+        int timeCorrection = 1;
         CommentCreateDto commentCreateDto = new CommentCreateDto();
         commentCreateDto.setText(text);
         Item item = new Item();
@@ -26,7 +27,7 @@ class CommentMapperTest {
         assertThat(result.getText()).isEqualTo(text);
         assertThat(result.getAuthor()).isEqualTo(user);
         assertThat(result.getItem()).isEqualTo(item);
-        assertThat(result.getCreated()).isBefore(LocalDateTime.now().plusMinutes(1));
+        assertThat(result.getCreated()).isBefore(LocalDateTime.now().plusMinutes(timeCorrection));
     }
 
     @Test

@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -20,12 +19,11 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
-import ru.practicum.shareit.utils.PageUtils;
+import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -108,8 +106,7 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
         Page<Booking> bookings = Page.empty();
-        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
-        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"), sort);
+        Pageable pageable = PageRequestWithOffset.of(from, size, sort);
         switch (state) {
             case ALL:
                 bookings = bookingRepository.findAllByBooker_Id(userId, pageable);
@@ -134,7 +131,7 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.REJECTED, pageable);
                 break;
         }
-        return PageUtils.getElements(bookings.map(bookingMapper::toBookingDto).getContent(), from, size);
+        return bookings.map(bookingMapper::toBookingDto).getContent();
     }
 
     @Override
@@ -145,8 +142,7 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
         Page<Booking> bookings = Page.empty();
-        Map<String, Integer> pageableParam = PageUtils.getPageableParam(from, size);
-        Pageable pageable = PageRequest.of(pageableParam.get("page"), pageableParam.get("size"), sort);
+        Pageable pageable = PageRequestWithOffset.of(from, size, sort);
         switch (state) {
             case ALL:
                 bookings = bookingRepository.findAllByItem_Owner_Id(userId, pageable);
@@ -171,7 +167,7 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.REJECTED, pageable);
                 break;
         }
-        return PageUtils.getElements(bookings.map(bookingMapper::toBookingDto).getContent(), from, size);
+        return bookings.map(bookingMapper::toBookingDto).getContent();
     }
 
 }
