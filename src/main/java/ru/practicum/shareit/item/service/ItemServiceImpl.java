@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +24,12 @@ import ru.practicum.shareit.item.model.dto.ItemDto;
 import ru.practicum.shareit.item.model.dto.ItemMapper;
 import ru.practicum.shareit.item.model.dto.ItemPatchDto;
 import ru.practicum.shareit.item.storage.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.storage.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.utils.JsonMergePatchUtils;
+import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -47,11 +52,20 @@ public class ItemServiceImpl implements ItemService {
 
     private final UserService userService;
 
+    private final ItemRequestRepository itemRequestRepository;
+
     @Override
     @Transactional
     public ItemDto createItem(long userId, ItemDto itemDto) {
+        Item item;
         User owner = userService.getUser(userId);
-        Item item = ItemMapper.toItem(itemDto, owner);
+        if (Objects.nonNull(itemDto.getRequestId())) {
+            ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new NoSuchElementException("No item request id : " + itemDto.getRequestId()));
+            item = ItemMapper.toItem(itemDto, itemRequest, owner);
+        } else {
+            item = ItemMapper.toItem(itemDto, owner);
+        }
         Item createdItem = itemRepository.save(item);
         return ItemMapper.toItemDto(createdItem);
     }
@@ -102,9 +116,10 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getItemsForUser(long userId) {
-        List<Item> items = itemRepository.findByOwner_Id(userId);
-        List<Long> itemsIds = items.stream()
+    public List<ItemDto> getItemsForUser(long userId, int from, int size) {
+        Pageable pageable = PageRequestWithOffset.of(from, size);
+        Page<Item> pageItems = itemRepository.findByOwner_Id(userId, pageable);
+        List<Long> itemsIds = pageItems.getContent().stream()
                 .map(Item::getId)
                 .collect(Collectors.toList());
         List<Booking> bookings = bookingRepository.findAllByItem_IdInAndStatusIn(itemsIds,
@@ -113,9 +128,7 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, List<CommentDto>> groupedComments = comments.stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId(),
                         Collectors.mapping(commentMapper::toCommentDto, Collectors.toList())));
-        List<ItemDto> itemsDto = items.stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        List<ItemDto> itemsDto = pageItems.getContent().stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
         itemsDto.forEach(item -> {
             item.setLastBooking(getLastBooking(item.getId(), bookings));
             item.setNextBooking(getNextBooking(item.getId(), bookings));
@@ -143,11 +156,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> searchItems(String text) {
+    public List<ItemDto> searchItems(String text, int from, int size) {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        return itemRepository.search(text).stream()
+        Pageable pageable = PageRequestWithOffset.of(from, size);
+        Page<Item> pageItems = itemRepository.search(text, pageable);
+        return pageItems.getContent().stream()
                 .map(ItemMapper::toItemDto)
                 .collect(Collectors.toList());
     }

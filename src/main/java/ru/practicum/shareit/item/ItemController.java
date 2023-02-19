@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.comment.model.dto.CommentCreateDto;
 import ru.practicum.shareit.item.comment.model.dto.CommentDto;
@@ -11,12 +12,15 @@ import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.utils.ControllerConstants;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/items")
+@Validated
 public class ItemController {
 
     private final ItemService itemService;
@@ -43,15 +47,19 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> findAllForUser(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId) {
+    public List<ItemDto> findAllForUser(@RequestHeader(ControllerConstants.USER_ID_HEADER) long userId,
+                                        @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                        @Positive @RequestParam(defaultValue = "5") int size) {
         log.info("GET : get items for user id : {}", userId);
-        return itemService.getItemsForUser(userId);
+        return itemService.getItemsForUser(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> search(@RequestParam String text) {
+    public List<ItemDto> search(@RequestParam String text,
+                                @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+                                @Positive @RequestParam(defaultValue = "5") int size) {
         log.info("GET : search items by text : {}", text);
-        return itemService.searchItems(text);
+        return itemService.searchItems(text, from, size);
     }
 
     @PostMapping("/{itemId}/comment")
