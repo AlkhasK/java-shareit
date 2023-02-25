@@ -13,10 +13,10 @@ services:
       - SHAREIT_SERVER_URL=http://server:9090
 
   server:
-    build: ./serve
-    image: shareit/serve
+    build: ./server
+    image: shareit/server
     restart: always
-    container_name: serve
+    container_name: server
     ports:
       - "9090:9090"
     depends_on:
