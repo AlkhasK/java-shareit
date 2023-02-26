@@ -21,7 +21,6 @@ import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -192,47 +191,6 @@ class BookingServiceImplTest {
                 .thenReturn(booking);
 
         assertThrows(ItemNotAvailableException.class,
-                () -> bookingService.createBooking(userId, bookingCreateDto));
-
-        Mockito.verify(bookingRepository, Mockito.never()).save(Mockito.any());
-    }
-
-    @Test
-    void createBookingWhenBookingDateInvalidReturnInterrupt() {
-        long userId = 0L;
-        User user = new User();
-
-        long itemId = 0L;
-        boolean itemAvailable = true;
-        Item item = new Item();
-        item.setId(itemId);
-        item.setAvailable(itemAvailable);
-        item.setOwner(user);
-
-        LocalDateTime start = LocalDateTime.now().plusHours(1);
-        LocalDateTime end = LocalDateTime.now();
-        User booker = new User();
-        Booking booking = new Booking();
-        booking.setBooker(booker);
-        booking.setStart(start);
-        booking.setEnd(end);
-        booking.setItem(item);
-
-        BookingCreateDto bookingCreateDto = new BookingCreateDto();
-        bookingCreateDto.setItemId(itemId);
-
-        long bookingDtoId = 0L;
-        BookingDto bookingDto = new BookingDto();
-        bookingDto.setId(bookingDtoId);
-
-        Mockito.when(userService.getUser(userId))
-                .thenReturn(user);
-        Mockito.when(itemRepository.findById(itemId))
-                .thenReturn(Optional.of(item));
-        Mockito.when(bookingMapper.toBooking(bookingCreateDto, item, user))
-                .thenReturn(booking);
-
-        assertThrows(DateTimeException.class,
                 () -> bookingService.createBooking(userId, bookingCreateDto));
 
         Mockito.verify(bookingRepository, Mockito.never()).save(Mockito.any());

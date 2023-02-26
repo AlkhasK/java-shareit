@@ -21,7 +21,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -53,10 +52,6 @@ public class BookingServiceImpl implements BookingService {
         }
         if (!item.getAvailable()) {
             throw new ItemNotAvailableException(String.format("Item id : %s is booked", item.getId()));
-        }
-        if (booking.getEnd().isBefore(booking.getStart())) {
-            throw new DateTimeException(String.format("End date [%s] should be after start date [%s]",
-                    booking.getEnd(), booking.getStart()));
         }
         Booking createdBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingDto(createdBooking);
