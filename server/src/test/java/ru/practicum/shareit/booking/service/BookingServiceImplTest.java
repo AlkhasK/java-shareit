@@ -13,6 +13,10 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.model.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.model.dto.BookingDto;
 import ru.practicum.shareit.booking.model.dto.BookingMapper;
+import ru.practicum.shareit.booking.service.state.BookingStrategy;
+import ru.practicum.shareit.booking.service.state.BookingStrategyFactory;
+import ru.practicum.shareit.booking.service.state.owner.OwnerBookingStrategy;
+import ru.practicum.shareit.booking.service.state.owner.OwnerBookingStrategyFactory;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
 import ru.practicum.shareit.error.exceptions.ItemNotAvailableException;
@@ -42,6 +46,12 @@ class BookingServiceImplTest {
 
     @Mock
     private BookingMapper bookingMapper;
+
+    @Mock
+    private BookingStrategyFactory bookingStrategyFactory;
+
+    @Mock
+    private OwnerBookingStrategyFactory ownerBookingStrategyFactory;
 
     @InjectMocks
     private BookingServiceImpl bookingService;
@@ -496,9 +506,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_Id(Mockito.anyLong(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -522,10 +536,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_IdAndStatusInAndStartIsBeforeAndEndIsAfter(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -549,10 +566,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_IdAndStatusInAndEndIsBefore(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -576,10 +596,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_IdAndStatusInAndStartIsAfter(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -603,10 +626,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_IdAndStatus(Mockito.anyLong(),
-                        Mockito.any(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -630,10 +656,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        BookingStrategy bookingStrategy = Mockito.mock(BookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByBooker_IdAndStatus(Mockito.anyLong(),
-                        Mockito.any(), Mockito.any()))
+        Mockito.when(bookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(bookingStrategy);
+        Mockito.when(bookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -672,9 +701,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_Id(Mockito.anyLong(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -698,10 +731,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsBeforeAndEndIsAfter(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -725,10 +761,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_IdAndStatusInAndEndIsBefore(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -752,10 +791,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsAfter(Mockito.anyLong(),
-                        Mockito.anyList(), Mockito.any(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -779,9 +821,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_IdAndStatus(Mockito.anyLong(), Mockito.any(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 
@@ -805,9 +851,13 @@ class BookingServiceImplTest {
         BookingDto bookingDto = new BookingDto();
         List<BookingDto> bookingDtos = List.of(bookingDto);
 
+        OwnerBookingStrategy ownerBookingStrategy = Mockito.mock(OwnerBookingStrategy.class);
+
         Mockito.when(userService.getUser(userId))
                 .thenReturn(user);
-        Mockito.when(bookingRepository.findAllByItem_Owner_IdAndStatus(Mockito.anyLong(), Mockito.any(), Mockito.any()))
+        Mockito.when(ownerBookingStrategyFactory.getStrategy(Mockito.any()))
+                .thenReturn(ownerBookingStrategy);
+        Mockito.when(ownerBookingStrategy.getBookings(Mockito.any()))
                 .thenReturn(pageBookings);
         Mockito.when(bookingMapper.toBookingDto(booking)).thenReturn(bookingDto);
 

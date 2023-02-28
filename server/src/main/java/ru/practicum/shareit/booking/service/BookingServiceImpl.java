@@ -12,6 +12,9 @@ import ru.practicum.shareit.booking.model.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.model.dto.BookingDto;
 import ru.practicum.shareit.booking.model.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.dto.State;
+import ru.practicum.shareit.booking.service.state.BookingParams;
+import ru.practicum.shareit.booking.service.state.BookingStrategyFactory;
+import ru.practicum.shareit.booking.service.state.owner.OwnerBookingStrategyFactory;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.error.exceptions.EntityNotFoundException;
 import ru.practicum.shareit.error.exceptions.ItemNotAvailableException;
@@ -21,7 +24,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 import ru.practicum.shareit.utils.pagination.PageRequestWithOffset;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -39,6 +41,10 @@ public class BookingServiceImpl implements BookingService {
     private final UserService userService;
 
     private final BookingMapper bookingMapper;
+
+    private final BookingStrategyFactory bookingStrategyFactory;
+
+    private final OwnerBookingStrategyFactory ownerBookingStrategyFactory;
 
     @Override
     @Transactional
@@ -100,32 +106,9 @@ public class BookingServiceImpl implements BookingService {
         if (Objects.isNull(state)) {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
-        Page<Booking> bookings = Page.empty();
         Pageable pageable = PageRequestWithOffset.of(from, size, sort);
-        switch (state) {
-            case ALL:
-                bookings = bookingRepository.findAllByBooker_Id(userId, pageable);
-                break;
-            case CURRENT:
-                bookings = bookingRepository.findAllByBooker_IdAndStatusInAndStartIsBeforeAndEndIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(),
-                        LocalDateTime.now(), pageable);
-                break;
-            case PAST:
-                bookings = bookingRepository.findAllByBooker_IdAndStatusInAndEndIsBefore(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
-                break;
-            case FUTURE:
-                bookings = bookingRepository.findAllByBooker_IdAndStatusInAndStartIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
-                break;
-            case WAITING:
-                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.WAITING, pageable);
-                break;
-            case REJECTED:
-                bookings = bookingRepository.findAllByBooker_IdAndStatus(userId, Status.REJECTED, pageable);
-                break;
-        }
+        BookingParams bookingParams = new BookingParams(userId, pageable);
+        Page<Booking> bookings = bookingStrategyFactory.getStrategy(state).getBookings(bookingParams);
         return bookings.map(bookingMapper::toBookingDto).getContent();
     }
 
@@ -136,32 +119,9 @@ public class BookingServiceImpl implements BookingService {
         if (Objects.isNull(state)) {
             throw new IllegalArgumentException("Unknown state: " + stateParam);
         }
-        Page<Booking> bookings = Page.empty();
         Pageable pageable = PageRequestWithOffset.of(from, size, sort);
-        switch (state) {
-            case ALL:
-                bookings = bookingRepository.findAllByItem_Owner_Id(userId, pageable);
-                break;
-            case CURRENT:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsBeforeAndEndIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING, Status.REJECTED), LocalDateTime.now(),
-                        LocalDateTime.now(), pageable);
-                break;
-            case PAST:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndEndIsBefore(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
-                break;
-            case FUTURE:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatusInAndStartIsAfter(userId,
-                        List.of(Status.APPROVED, Status.WAITING), LocalDateTime.now(), pageable);
-                break;
-            case WAITING:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.WAITING, pageable);
-                break;
-            case REJECTED:
-                bookings = bookingRepository.findAllByItem_Owner_IdAndStatus(userId, Status.REJECTED, pageable);
-                break;
-        }
+        BookingParams bookingParams = new BookingParams(userId, pageable);
+        Page<Booking> bookings = ownerBookingStrategyFactory.getStrategy(state).getBookings(bookingParams);
         return bookings.map(bookingMapper::toBookingDto).getContent();
     }
 
